@@ -1,0 +1,94 @@
+#:schema https://json.schemastore.org/pyproject.json
+# ref: <https://packaging.python.org/en/latest/specifications/pyproject-toml/>
+
+[project]
+name = "liblaf-conf"
+description = ""
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [
+  { name = "liblaf", email = "30631553+liblaf@users.noreply.github.com" }
+]
+keywords = []
+classifiers = [
+  # ref: <https://pypi.org/classifiers/>
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed"
+]
+dependencies = [
+    "lazy-loader>=0.1",
+    "pendulum>=3.2.0,<4.0.0",
+    "pydantic>=2.12.5,<3.0.0",
+]
+dynamic = ["version"]
+
+[project.urls]
+# ref: <https://packaging.python.org/en/latest/specifications/well-known-project-urls/#well-known-labels>
+"Changelog" = "https://github.com/liblaf/conf/blob/main/CHANGELOG.md"
+"Documentation" = "https://liblaf.github.io/conf/"
+"Funding" = "https://github.com/liblaf/conf?sponsor=1"
+"Homepage" = "https://github.com/liblaf/conf"
+"Issue Tracker" = "https://github.com/liblaf/conf/issues"
+"Release Notes" = "https://github.com/liblaf/conf/releases"
+"Source Code" = "https://github.com/liblaf/conf"
+
+[dependency-groups]
+dev = []
+build = ["check-wheel-contents>=0.6", "hatch>=1", "twine>=6"]
+docs = ["liblaf-mkdocs-preset>=0.3", "mkdocs>=1,<2"]
+nox = ["liblaf-nox-recipes>=0.1", "nox>=2026", "nox-uv>=0.7"]
+test = [
+  "pytest>=9",
+  "pytest-codspeed>=4",
+  "pytest-cov>=7",
+  "pytest-randomly>=4",
+  "pytest-xdist>=3"
+]
+
+[build-system]
+requires = ["hatch-vcs", "hatchling"]
+build-backend = "hatchling.build"
+
+[tool.check-wheel-contents]
+ignore = ["W002"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/liblaf/conf/_version.py"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/liblaf"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.pytest]
+addopts = ["--doctest-modules", "--import-mode=importlib", "--showlocals"]
+consider_namespace_packages = true
+strict = true
+testpaths = ["benches", "src", "tests"]
+
+[tool.ruff]
+extend = ".config/linters/.ruff.toml"
+
+[tool.ty.environment]
+python = ".venv"  # ty-vscode does not work without this
+
+[tool.uv]
+default-groups = "all"
