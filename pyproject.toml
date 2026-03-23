@@ -82,10 +82,12 @@ source = "vcs"
 addopts = [
   "--doctest-modules",
   "--import-mode=importlib",
+  "--junit-xml=junit.xml",
   "--numprocesses=auto",
   "--showlocals"
 ]
 consider_namespace_packages = true
+junit_family = "legacy"
 strict = true
 testpaths = ["benches", "src", "tests"]
 
