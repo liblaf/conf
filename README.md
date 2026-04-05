@@ -18,21 +18,23 @@
 
 </div>
 
-Typed configuration primitives for Python applications built on descriptors,
-`contextvars`, and environment-aware converters.
+`liblaf-conf` lets Python applications define typed configuration once, load it
+from environment variables, and apply scoped runtime overrides with
+`contextvars`.
 
 ## ✨ Features
 
-- 🧩 **Declarative config objects:** Define settings once with `BaseConfig`,
-  `Field`, and `group()` instead of wiring ad hoc globals or dictionaries.
-- 🌱 **Environment-aware loading:** Bind fields to derived or explicit
-  environment variable names and refresh them with `load_env()`.
-- 🎯 **Typed conversion helpers:** Use built-in `field_*` helpers for booleans,
-  numbers, JSON, paths, and temporal values.
-- 🔄 **Scoped overrides:** Temporarily swap values with `Var.override()` or
-  `BaseConfig.override()` while preserving `contextvars` semantics.
-- 🪺 **Nested config trees:** Compose related settings into groups and serialize
-  them with `to_dict()` or `to_namespace()`.
+- 🧩 **Descriptor-based config models:** Build config objects from `BaseConfig`,
+  `Field`, and `group()` instead of wiring ad hoc globals or nested dicts.
+- 🌱 **Environment-ready defaults:** Bind fields to derived or explicit
+  environment variable names and refresh a whole config tree with `load_env()`.
+- 🎯 **Typed helper factories:** Reach for `field_bool`, `field_json`,
+  `field_path`, and the temporal helpers when you want built-in string parsing.
+- 🔄 **Context-local overrides:** Use `Var.override()` or
+  `BaseConfig.override()` to change values temporarily without leaking across
+  contexts.
+- 🪺 **Nested serialization helpers:** Compose related sections and export the
+  active state with `to_dict()` or `to_namespace()`.
 
 ## 📦 Installation
 
@@ -50,29 +52,34 @@ from liblaf import conf
 
 
 class DatabaseConfig(conf.BaseConfig):
-    url: conf.Field[str] = conf.Field(default="sqlite:///app.db")
+    url: conf.Field[str] = conf.field_str(default="sqlite:///app.db")
 
 
 class AppConfig(conf.BaseConfig):
-    debug: conf.Field[bool] = conf.field_bool()
+    debug: conf.Field[bool] = conf.field_bool(default=False)
+    allowed_hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
     database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
 
 
 cfg = AppConfig()
+cfg.set(database={"url": "sqlite:///dev.db"})
 
-cfg.set(debug=True, database={"url": "sqlite:///dev.db"})
+cfg.load_env()
+cfg.debug.set(True)
 
 with cfg.override(debug=False):
     assert cfg.debug.get() is False
 
 assert cfg.to_dict() == {
     "debug": True,
+    "allowed_hosts": ["localhost"],
     "database": {"url": "sqlite:///dev.db"},
 }
 ```
 
-`BaseConfig` subclasses are singletons, so calling `AppConfig()` again returns
-the same config object.
+`BaseConfig` subclasses are cached singletons, so `AppConfig()` returns the
+same config object each time while each field still stores its active value in
+a `ContextVar`.
 
 ## ⌨️ Local Development
 
@@ -88,12 +95,12 @@ mise run docs:serve
 ```
 
 `mise` provides the primary setup, lint, and docs commands in this repository.
-`nox` drives the test matrix used by CI.
+`nox` drives the Python test matrix used by CI.
 
 ## 🤝 Contributing
 
 Issues and pull requests are welcome, especially when they improve the public
-API, docs, or typed conversion helpers.
+API, typed converter helpers, or documentation examples.
 
 [![PR WELCOME](https://img.shields.io/badge/%F0%9F%A4%AF%20PR%20WELCOME-%E2%86%92-ffcb47?labelColor=black&style=for-the-badge)](https://github.com/liblaf/conf/pulls)
 

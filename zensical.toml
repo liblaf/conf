@@ -9,7 +9,12 @@ site_author = "liblaf"
 # Navigation
 nav = [
   { "Home" = "README.md" },
-  { "API Reference" = "reference/README.md" },
+  { "API Reference" = [
+    { "Overview" = "reference/README.md" },
+    { "Core Primitives" = "reference/core.md" },
+    { "Field Helpers" = "reference/field-helpers.md" },
+    { "Converters" = "reference/converters.md" },
+  ] },
 ]
 # Repository
 repo_url = "https://github.com/liblaf/conf"
@@ -97,7 +102,6 @@ extensions = [
 find_stubs_package = true
 show_inheritance_diagram = true
 # Headings
-parameter_headings = true
 show_root_heading = true
 show_symbol_type_heading = true
 show_symbol_type_toc = true
