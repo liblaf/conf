@@ -1,3 +1,5 @@
+"""Field descriptors that bind config attributes to `Var` instances."""
+
 import dataclasses
 from typing import Self, overload
 
@@ -9,6 +11,13 @@ from ._var import Var
 
 @dataclasses.dataclass(frozen=True, slots=True, weakref_slot=True)
 class Field[T]:
+    """Describe a config value and lazily bind it to a `Var`.
+
+    The descriptor stores the environment-variable name, default value, optional
+    factory, and string converter used when it creates a bound variable for a
+    config instance.
+    """
+
     env: str | None = None
     default: T | MissingType = MISSING
     factory: Factory[T] | None = None
@@ -22,6 +31,7 @@ class Field[T]:
     def __get__(
         self, instance: ConfigProtocol | None, owner: type | None = None
     ) -> Self | Var[T]:
+        """Return the descriptor on the class or a cached bound variable."""
         if instance is None:
             return self
         if self.name not in instance.__dict__:
@@ -29,9 +39,11 @@ class Field[T]:
         return instance.__dict__[self.name]
 
     def __set_name__(self, owner: type, name: str) -> None:
+        """Record the attribute name assigned by the owning config class."""
         object.__setattr__(self, "name", name)
 
     def _bind(self, instance: ConfigProtocol) -> Var[T]:
+        """Create the `Var` instance used by one config object."""
         name: str = instance.name + "." + self.name
         env: str = self.env or instance.env_prefix + self.name.upper()
         return Var(
@@ -41,3 +53,14 @@ class Field[T]:
             env=env,
             converter=self.converter,
         )
+
+
+def field[T](
+    *,
+    env: str | None = None,
+    default: T | MissingType = MISSING,
+    factory: Factory[T] | None = None,
+    converter: Converter[T] = converters.identity,
+) -> Field[T]:
+    """Create a `Field` descriptor for a config attribute."""
+    return Field(env=env, default=default, factory=factory, converter=converter)

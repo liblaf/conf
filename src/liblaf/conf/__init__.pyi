@@ -1,5 +1,5 @@
 from ._config import BaseConfig, ConfigMeta
-from ._field import Converter, Factory, Field
+from ._field import Converter, Factory, Field, field
 from ._field_specifiers import (
     field_bool,
     field_date,
@@ -29,6 +29,7 @@ __all__ = [
     "__commit_id__",
     "__version__",
     "__version_tuple__",
+    "field",
     "field_bool",
     "field_date",
     "field_datetime",
