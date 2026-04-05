@@ -3,14 +3,22 @@
 
 [project]
 name = "liblaf-conf"
-description = ""
+description = "Typed Python configuration models with environment loading and context-local overrides."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 authors = [
   { name = "liblaf", email = "30631553+liblaf@users.noreply.github.com" }
 ]
-keywords = []
+keywords = [
+  "config",
+  "configuration",
+  "contextvars",
+  "environment-variables",
+  "pydantic",
+  "settings",
+  "typed"
+]
 classifiers = [
   # ref: <https://pypi.org/classifiers/>
   "Development Status :: 4 - Beta",
@@ -20,9 +28,12 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed"
 ]
 dependencies = [

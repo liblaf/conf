@@ -2,7 +2,7 @@
 
 ![conf](https://socialify.git.ci/liblaf/conf/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&pattern=Transparent&pulls=1&stargazers=1&theme=Auto)
 
-**[Explore the docs »](https://liblaf.github.io/conf/)**
+**[Explore the docs »](https://liblaf-conf.readthedocs.io/)**
 
 [![PyPI - Version](https://img.shields.io/pypi/v/liblaf-conf?logo=PyPI)](https://pypi.org/project/liblaf-conf/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/liblaf-conf?logo=Python)](https://pypi.org/project/liblaf-conf/)
@@ -108,7 +108,7 @@ API, typed converter helpers, or documentation examples.
 
 ## 🔗 Links
 
-- [Documentation](https://liblaf.github.io/conf/)
+- [Documentation](https://liblaf-conf.readthedocs.io/)
 - [PyPI](https://pypi.org/project/liblaf-conf/)
 - [Source Code](https://github.com/liblaf/conf)
 - [Release Notes](https://github.com/liblaf/conf/releases)
