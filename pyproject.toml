@@ -43,17 +43,18 @@ dynamic = ["version"]
 "Source Code" = "https://github.com/liblaf/conf"
 
 [dependency-groups]
-dev = []
 build = ["check-wheel-contents>=0.6", "hatch>=1", "twine>=6"]
-docs = ["liblaf-mkdocs-preset>=0.3", "mkdocs>=1,<2"]
-nox = ["liblaf-nox-recipes>=0.1", "nox>=2026"]
-test = [
-  "pytest>=9",
-  "pytest-cov>=7",
-  "pytest-randomly>=4",
-  "pytest-xdist>=3",
-  { include-group = "nox" }
+docs = [
+  "griffe-fieldz>=0.5",
+  "griffe-inherited-docstrings>=1",
+  "griffe-pydantic>=1",
+  "griffe-warnings-deprecated>=1",
+  "mkdocstrings[python]>=1",
+  "zensical>=0.0.30"
 ]
+lint = ["import-linter[ui]>=2", "ruff>=0.15"]
+nox = ["liblaf-nox-recipes>=0.1", "nox>=2026", "nox-uv>=0.7"]
+test = ["pytest>=9", "pytest-cov>=7", "pytest-randomly>=4"]
 
 [build-system]
 requires = ["hatch-vcs", "hatchling"]
@@ -78,12 +79,19 @@ packages = ["src/liblaf"]
 [tool.hatch.version]
 source = "vcs"
 
+[tool.importlinter]
+root_package = "liblaf.conf"
+
+[[tool.importlinter.contracts]]
+ancestors = ["liblaf.conf"]
+name = "Acyclic siblings"
+type = "acyclic_siblings"
+
 [tool.pytest]
 addopts = [
   "--doctest-modules",
   "--import-mode=importlib",
-  "--junit-xml=junit.xml",
-  "--numprocesses=auto",
+  "--junitxml=junit.xml",
   "--showlocals"
 ]
 consider_namespace_packages = true
@@ -93,9 +101,6 @@ testpaths = ["benches", "src", "tests"]
 
 [tool.ruff]
 extend = ".config/linters/.ruff.toml"
-
-[tool.ty.environment]
-python = ".venv"  # ty-vscode does not work without this
 
 [tool.uv]
 default-groups = "all"

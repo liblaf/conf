@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import pydantic
 
 if TYPE_CHECKING:
-    from liblaf.conf._field import Converter
+    from liblaf.conf._types import Converter
 
 
 def pydantic_model_validate[T: pydantic.BaseModel](model: type[T]) -> Converter[T]:
