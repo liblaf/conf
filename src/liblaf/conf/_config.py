@@ -97,7 +97,8 @@ class BaseConfig(metaclass=ConfigMeta):
         """Set fields or nested groups from Python values.
 
         Mapping values passed for nested config groups are forwarded to that
-        group's own `set()` method.
+        group's own `set()` method. When `changes` and keyword arguments contain
+        the same name, the value from `changes` is applied.
 
         Args:
             changes: Optional mapping of field or group names to new values.
@@ -114,6 +115,10 @@ class BaseConfig(metaclass=ConfigMeta):
         self, changes: Mapping[str, Any] | None = None, /, **kwargs: Any
     ) -> Generator[None]:
         """Temporarily override fields or nested groups in the active context.
+
+        Mapping values passed for nested groups are delegated to the nested
+        config's own `override()` method. Previous values are restored even when
+        the block exits with an exception.
 
         Args:
             changes: Optional mapping of names to temporary values.

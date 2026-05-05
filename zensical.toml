@@ -10,7 +10,7 @@ site_author = "liblaf"
 nav = [
   { "Home" = "README.md" },
   { "API Reference" = [
-    { "<code class=\"doc-symbol doc-symbol-toc doc-symbol-module\"></code> conf" = [
+    { "<code class=\"doc-symbol doc-symbol-toc doc-symbol-module\"></code> liblaf.conf" = [
       "reference/liblaf/conf/README.md",
       "reference/liblaf/conf/converters/README.md"
     ] },

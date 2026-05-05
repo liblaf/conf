@@ -196,6 +196,9 @@ def field_list_str(
 ) -> Field[list[str]]:
     """Create a field that splits strings into trimmed string lists.
 
+    Empty items are preserved. For example, the default converter turns
+    `"a,, b,"` into `["a", "", "b", ""]`.
+
     Args:
         env: Explicit environment variable name.
         default: Default list value.

@@ -1,11 +1,7 @@
 # conf
 
-`liblaf-conf` is a small descriptor-based configuration layer for Python
-applications. You declare settings as normal classes, load string values from
-environment variables, and use `contextvars`-backed overrides when tests,
-tasks, or request handlers need a temporary view of configuration.
-
-## Install
+Define configuration as ordinary Python classes, bind fields to environment
+variables, and override values for the current `contextvars` context.
 
 ```bash
 uv add liblaf-conf
@@ -13,10 +9,10 @@ uv add liblaf-conf
 
 `liblaf-conf` supports Python 3.12 and newer.
 
-## Define a Config Tree
+## Define Settings
 
-Start with `BaseConfig`. Add scalar settings with `Field` or a `field_*`
-helper, then compose nested sections with `group()`.
+Subclass `BaseConfig`, declare values with `Field` or a `field_*` helper, and
+compose nested sections with `group()`.
 
 ```python
 from liblaf import conf
@@ -33,15 +29,14 @@ class AppConfig(conf.BaseConfig):
     database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
 ```
 
-`AppConfig()` returns a cached singleton. Each field still stores its active
-value in a `Var`, so overrides are scoped to the current `contextvars` context
-instead of mutating a process-wide global forever.
+`AppConfig()` is a cached singleton. Accessing `cfg.port` returns a `Var`, and
+that variable stores its active value in a `ContextVar`.
 
 ## Load, Set, and Override
 
-Call `load_env()` to refresh every field from its configured environment
-variable. Call `set()` when you already have Python values, and pass nested
-mappings for nested config groups.
+Call `load_env()` when string values should come from the environment. Call
+`set()` when you already have Python values. For nested groups, pass nested
+mappings.
 
 ```python
 cfg = AppConfig()
@@ -56,8 +51,7 @@ with cfg.override(debug=True, database={"url": "sqlite:///test.db"}):
 assert cfg.database.url.get() == "sqlite:///dev.db"
 ```
 
-Fields expose `Var` objects. Use `get()`, `set()`, `reset()`, `load_env()`,
-and `override()` directly when you only need to work with one value.
+Use the field `Var` directly when only one value needs to change.
 
 ```python
 token = cfg.port.set(9000)
@@ -69,8 +63,8 @@ finally:
 
 ## Convert Environment Strings
 
-`Field` accepts any converter callable. The convenience helpers cover common
-cases:
+Environment variables are strings, so each field can carry a converter. The
+helper constructors cover common cases:
 
 - `field_bool`, `field_int`, `field_float`, `field_decimal`, and `field_str`
   for scalar values.
@@ -102,6 +96,9 @@ assert cfg.to_dict() == {
     "database": {"url": "sqlite:///dev.db"},
 }
 ```
+
+`to_dict()` reads the same active context as `get()`, so temporary overrides
+are reflected while the override is active and disappear when it exits.
 
 ## API Map
 

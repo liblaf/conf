@@ -22,6 +22,25 @@ def test_group_descriptor_returns_self_and_caches_factory_result() -> None:
     assert calls == [1]
 
 
+def test_group_descriptor_caches_values_per_owner_instance() -> None:
+    calls: list[int] = []
+
+    def build() -> object:
+        calls.append(1)
+        return object()
+
+    class Owner:
+        nested = Group(build)
+
+    first = Owner()
+    second = Owner()
+
+    assert first.nested is first.nested
+    assert second.nested is second.nested
+    assert first.nested is not second.nested
+    assert len(calls) == 2
+
+
 def test_group_helper_wraps_nested_configs() -> None:
     class ChildConfig(conf.BaseConfig):
         value: conf.Field[int] = conf.Field(default=1)
