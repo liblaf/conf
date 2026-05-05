@@ -7,7 +7,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Changelog](https://github.com/conventional-changelog/conventional-changelog-config-spec/blob/master/versions/2.2.0/README.md),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.1.1](https://github.com/liblaf/conf/releases/tag/v0.1.1) - 2026-04-05
+## [v0.1.2](https://github.com/liblaf/conf/releases/tag/v0.1.2) - 2026-05-05
+
+### 📝 Documentation
+
+- add comprehensive docstrings to public API - [0029290](https://github.com/liblaf/conf/commit/002929065621a26c1b133c85fe65d8d004676308) by [@liblaf](https://github.com/liblaf)
+
+### ❤️ Contributors
+
+- [@liblaf](https://github.com/liblaf)
+- [@renovate[bot]](https://github.com/apps/renovate) made their first contribution in [#15](https://github.com/liblaf/conf/pull/15)
+
+## [v0.1.1](https://github.com/liblaf/conf/releases/tag/v0.1.1) - 2026-04-06
 
 ### ✨ Features
 
@@ -27,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ❤️ Contributors
 
+- [@liblaf-release-please[bot]](https://github.com/apps/liblaf-release-please) made their first contribution in [#10](https://github.com/liblaf/conf/pull/10)
 - [@liblaf](https://github.com/liblaf)
 
 ## [v0.1.0](https://github.com/liblaf/conf/releases/tag/v0.1.0) - 2026-03-23
