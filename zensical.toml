@@ -4,16 +4,16 @@
 # Basics
 site_name = "Conf"
 site_url = "__SITE_URL__"
-site_description = ""
+site_description = "Descriptor-based Python configuration models with environment loading and context-local overrides."
 site_author = "liblaf"
 # Navigation
 nav = [
   { "Home" = "README.md" },
   { "API Reference" = [
-    { "Overview" = "reference/README.md" },
-    { "Core Primitives" = "reference/core.md" },
-    { "Field Helpers" = "reference/field-helpers.md" },
-    { "Converters" = "reference/converters.md" },
+    { "<code class=\"doc-symbol doc-symbol-toc doc-symbol-module\"></code> conf" = [
+      "reference/liblaf/conf/README.md",
+      "reference/liblaf/conf/converters/README.md"
+    ] },
   ] },
 ]
 # Repository
@@ -102,10 +102,10 @@ extensions = [
 find_stubs_package = true
 show_inheritance_diagram = true
 # Headings
+heading_level = 1
 show_root_heading = true
 show_symbol_type_heading = true
 show_symbol_type_toc = true
-type_parameter_headings = true
 # Members
 inherited_members = true
 filters = "public"

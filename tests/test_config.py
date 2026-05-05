@@ -26,6 +26,46 @@ def test_base_config_set_override_and_serializers_work_with_groups() -> None:
     assert cfg.to_dict() == {"count": 7, "child": {"flag": True}}
 
 
+def test_base_config_override_restores_values_after_exception() -> None:
+    class AppConfig(conf.BaseConfig):
+        count: conf.Field[int] = conf.Field(default=1)
+
+    cfg = AppConfig()
+
+    def fail_inside_override() -> None:
+        with cfg.override(count=2):
+            assert cfg.count.get() == 2
+            message = "boom"
+            raise RuntimeError(message)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        fail_inside_override()
+
+    assert cfg.count.get() == 1
+
+
+def test_base_config_rejects_unknown_set_or_override_names() -> None:
+    class AppConfig(conf.BaseConfig):
+        count: conf.Field[int] = conf.Field(default=1)
+
+    cfg = AppConfig()
+
+    with pytest.raises(AttributeError):
+        cfg.set(missing=True)
+    with pytest.raises(AttributeError), cfg.override(missing=True):
+        pass
+
+
+def test_base_config_mapping_values_take_precedence_over_kwargs() -> None:
+    class AppConfig(conf.BaseConfig):
+        count: conf.Field[int] = conf.Field(default=1)
+
+    cfg = AppConfig()
+    cfg.set({"count": 3}, count=2)
+
+    assert cfg.count.get() == 3
+
+
 def test_base_config_load_env_recurses_into_groups(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

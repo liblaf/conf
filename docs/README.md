@@ -1,50 +1,11 @@
 # conf
 
-`liblaf-conf` helps you keep application configuration in normal Python classes
-instead of a tangle of globals, nested dicts, and ad hoc parsing code. The
-package combines descriptor-based declarations, environment-variable loading,
-and `contextvars`-backed overrides so the active configuration stays explicit
-and test-friendly.
+`liblaf-conf` is a small descriptor-based configuration layer for Python
+applications. You declare settings as normal classes, load string values from
+environment variables, and use `contextvars`-backed overrides when tests,
+tasks, or request handlers need a temporary view of configuration.
 
-## A Small Working Example
-
-```python
-from liblaf import conf
-
-
-class DatabaseConfig(conf.BaseConfig):
-    url: conf.Field[str] = conf.field_str(default="sqlite:///app.db")
-
-
-class AppConfig(conf.BaseConfig):
-    debug: conf.Field[bool] = conf.field_bool(default=False)
-    allowed_hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
-    database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
-
-
-cfg = AppConfig()
-cfg.set(database={"url": "sqlite:///dev.db"})
-cfg.load_env()
-
-with cfg.override(debug=True):
-    assert cfg.debug.get() is True
-```
-
-This is the full shape of the library: define config with `BaseConfig`, attach
-values with `Field`, compose sections with `group()`, and let each bound `Var`
-manage the active value.
-
-The package centers on four building blocks:
-
-- `BaseConfig` groups related settings and exposes serialization helpers.
-- `Field` declares one config value and binds it to a `Var`.
-- `group()` attaches nested config sections.
-- `Var` stores the active value and supports `get()`, `set()`, `load_env()`,
-  and `override()`.
-
-## Start Here
-
-Install the package with `uv`:
+## Install
 
 ```bash
 uv add liblaf-conf
@@ -52,17 +13,10 @@ uv add liblaf-conf
 
 `liblaf-conf` supports Python 3.12 and newer.
 
-If you want the shortest path from declaration to use, start with these
-operations:
+## Define a Config Tree
 
-- Declare settings with `Field(...)` or a `field_*` helper.
-- Compose nested sections with `group(...)`.
-- Call `set(...)` for Python-side updates and `load_env()` for environment
-  values.
-- Use `override(...)` for temporary changes and `to_dict()` or
-  `to_namespace()` when you need to serialize the active state.
-
-Here is a slightly fuller example that shows serialization as well:
+Start with `BaseConfig`. Add scalar settings with `Field` or a `field_*`
+helper, then compose nested sections with `group()`.
 
 ```python
 from liblaf import conf
@@ -74,41 +28,84 @@ class DatabaseConfig(conf.BaseConfig):
 
 class AppConfig(conf.BaseConfig):
     debug: conf.Field[bool] = conf.field_bool(default=False)
-    allowed_hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
+    port: conf.Field[int] = conf.field_int(env="PORT", default=8000)
+    hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
     database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
+```
 
+`AppConfig()` returns a cached singleton. Each field still stores its active
+value in a `Var`, so overrides are scoped to the current `contextvars` context
+instead of mutating a process-wide global forever.
 
+## Load, Set, and Override
+
+Call `load_env()` to refresh every field from its configured environment
+variable. Call `set()` when you already have Python values, and pass nested
+mappings for nested config groups.
+
+```python
 cfg = AppConfig()
-cfg.set(debug=True, database={"url": "sqlite:///dev.db"})
+
+cfg.load_env()
+cfg.set(database={"url": "sqlite:///dev.db"})
+
+with cfg.override(debug=True, database={"url": "sqlite:///test.db"}):
+    assert cfg.debug.get() is True
+    assert cfg.database.url.get() == "sqlite:///test.db"
+
+assert cfg.database.url.get() == "sqlite:///dev.db"
+```
+
+Fields expose `Var` objects. Use `get()`, `set()`, `reset()`, `load_env()`,
+and `override()` directly when you only need to work with one value.
+
+```python
+token = cfg.port.set(9000)
+try:
+    assert cfg.port.get() == 9000
+finally:
+    cfg.port.reset(token)
+```
+
+## Convert Environment Strings
+
+`Field` accepts any converter callable. The convenience helpers cover common
+cases:
+
+- `field_bool`, `field_int`, `field_float`, `field_decimal`, and `field_str`
+  for scalar values.
+- `field_json`, `field_list_str`, and `field_path` for structured values.
+- `field_date`, `field_datetime`, `field_time`, and `field_timedelta` for
+  temporal values backed by Pydantic validation.
+
+```python
+class WorkerConfig(conf.BaseConfig):
+    retries: conf.Field[int] = conf.field_int(default=3)
+    labels: conf.Field[list[str]] = conf.field_list_str(delimiter=";")
+```
+
+For lower-level control, pass your own converter to `field()`, `Field`, or
+`Var`.
+
+## Serialize the Active State
+
+Use `to_dict()` when another library needs ordinary dictionaries. Use
+`to_namespace()` when attribute access is more convenient.
+
+```python
+cfg.set(port=8000, debug=True, hosts=["localhost", "example.test"])
 
 assert cfg.to_dict() == {
     "debug": True,
-    "allowed_hosts": ["localhost"],
+    "port": 8000,
+    "hosts": ["localhost", "example.test"],
     "database": {"url": "sqlite:///dev.db"},
 }
 ```
 
-## Choosing an API
+## API Map
 
-Reach for `Field(...)` when you want to set a default, use a factory, override
-the generated environment-variable name, or provide your own converter.
-
-Use the `field_*` helpers when the value is already one of the supported scalar,
-structured, or temporal types and you want the package to provide the
-conversion logic.
-
-Use `group()` when one config section should own another config section and you
-want `set()`, `load_env()`, `to_dict()`, and `override()` to recurse through
-the whole tree.
-
-## Where To Go Next
-
-- Read the [API reference overview](reference/README.md) for the reference map.
-- Open [Core primitives](reference/core.md) for `BaseConfig`, `Field`, `Var`,
-  `field()`, and `group()`.
-- Open [Field helpers](reference/field-helpers.md) for the `field_*`
-  convenience factories.
-- Open [Converters](reference/converters.md) when you want lower-level
-  Pydantic-backed converter helpers.
-- Visit the [GitHub repository](https://github.com/liblaf/conf) for release
-  notes, issue tracking, and development workflow details.
+- [liblaf.conf](reference/liblaf/conf/README.md): config containers, fields,
+  groups, variables, and `field_*` helpers.
+- [liblaf.conf.converters](reference/liblaf/conf/converters/README.md):
+  Pydantic-backed converter factories and `identity`.

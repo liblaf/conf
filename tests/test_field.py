@@ -29,7 +29,22 @@ def test_field_uses_explicit_env_and_converter(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_field_passes_factory_to_bound_var() -> None:
+    calls: list[int] = []
+
+    def build() -> list[int]:
+        calls.append(1)
+        return []
+
     class SampleConfig(conf.BaseConfig):
-        items: conf.Field[list[object]] = conf.Field(factory=list)
+        items: conf.Field[list[int]] = conf.Field(factory=build)
 
     assert SampleConfig().items.get() == []
+    assert calls == [1]
+
+
+def test_field_helper_builds_descriptor_with_defaults() -> None:
+    field: conf.Field[str] = conf.field(default="fallback", env="VALUE")
+
+    assert field.default == "fallback"
+    assert field.env == "VALUE"
+    assert field.converter("env-value") == "env-value"

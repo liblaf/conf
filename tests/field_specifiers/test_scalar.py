@@ -23,3 +23,18 @@ def test_scalar_field_specifiers_convert_values[T](
 ) -> None:
     field: conf.Field[T] = factory()
     assert field.converter(value) == expected
+
+
+def test_scalar_field_specifiers_accept_custom_converter() -> None:
+    field: conf.Field[int] = conf.field_int(converter=len)
+
+    assert field.converter("abc") == 3
+
+
+def test_field_path_converts_default_and_factory_values() -> None:
+    default_field: conf.Field[Path] = conf.field_path(default="cache")
+    factory_field: conf.Field[Path] = conf.field_path(factory=lambda: "state")
+
+    assert default_field.default == Path("cache")
+    assert factory_field.factory is not None
+    assert factory_field.factory() == Path("state")
