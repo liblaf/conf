@@ -14,11 +14,11 @@ from ._types import Converter, Factory
 
 @dataclasses.dataclass(init=False, frozen=True, slots=True, weakref_slot=True)
 class Var[T]:
-    """Store one typed configuration value in a `ContextVar`.
+    """Context-local storage for one configuration value.
 
-    Values can be seeded from a default, a factory, or an environment variable.
-    Temporary overrides use normal `ContextVar` semantics, so they are scoped to
-    the active context.
+    A `Var` can be seeded from an environment variable, a default value, or a
+    factory. The active value is stored in a [`contextvars.ContextVar`][], so
+    temporary overrides follow normal context propagation rules.
     """
 
     env: str | None
@@ -33,7 +33,19 @@ class Var[T]:
         env: str | None = None,
         converter: Converter[T] | None = None,
     ) -> None:
-        """Initialize a variable and eagerly apply any environment value."""
+        """Create a context-local config variable.
+
+        Args:
+            name: Name assigned to the underlying
+                [`contextvars.ContextVar`][].
+            default: Default value used when `env` is unset.
+            factory: Zero-argument callable used to create a default when
+                `default` is omitted.
+            env: Environment-variable name to read during initialization and
+                later `load_env()` calls.
+            converter: Callable used to convert environment strings to Python
+                values. Defaults to [`identity`][liblaf.conf.converters.identity].
+        """
         if converter is None:
             converter: Converter[T] = converters.identity
         if env is not None:
@@ -53,12 +65,12 @@ class Var[T]:
         object.__setattr__(self, "converter", converter)
 
     def __hash__(self) -> int:
-        """Hash the wrapped context variable."""
+        """Return the hash of the wrapped context variable."""
         return hash(self._var)
 
     @property
     def name(self) -> str:
-        """Return the `ContextVar` name."""
+        """Name of the wrapped [`contextvars.ContextVar`][]."""
         return self._var.name
 
     @overload
@@ -68,21 +80,41 @@ class Var[T]:
     @overload
     def get[D](self, default: D, /) -> D | T: ...
     def get(self, default: Any = MISSING) -> T:
-        """Return the current value or a caller-provided fallback."""
+        """Return the active value.
+
+        Args:
+            default: Optional fallback returned when the variable has no value.
+
+        Returns:
+            The active context value, or `default` when provided and no value is
+            set.
+        """
         if default is MISSING:
             return self._var.get()
         return self._var.get(default)
 
     def set(self, value: T) -> contextvars.Token[T]:
-        """Set the current value and return the reset token."""
+        """Set the active value.
+
+        Args:
+            value: New value for the active context.
+
+        Returns:
+            A [`contextvars.Token`][] that can restore the previous value with
+            [`reset()`][liblaf.conf.Var.reset].
+        """
         return self._var.set(value)
 
     def reset(self, token: contextvars.Token[T]) -> None:
-        """Restore the value captured by `set()`."""
+        """Restore a value captured by [`set()`][liblaf.conf.Var.set].
+
+        Args:
+            token: Token returned by a previous `set()` call.
+        """
         self._var.reset(token)
 
     def load_env(self) -> None:
-        """Reload the current value from the configured environment variable."""
+        """Reload the active value from the configured environment variable."""
         if self.env is None:
             return
         value: str | None = os.getenv(self.env)
@@ -95,13 +127,14 @@ class Var[T]:
 
     @contextlib.contextmanager
     def override(self, value: T) -> Generator[None]:
-        """Temporarily set a value for the duration of a context manager.
+        """Temporarily set a value in the active context.
 
         Args:
             value: Temporary value to expose inside the context.
 
         Yields:
-            `None` while the override is active.
+            `None` while the override is active. The previous value is restored
+            when the context exits.
         """
         token: contextvars.Token[T] = self._var.set(value)
         try:

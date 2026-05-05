@@ -11,3 +11,9 @@ def test_field_json() -> None:
 def test_field_list_str() -> None:
     field: conf.Field[list[str]] = conf.field_list_str(delimiter="|")
     assert field.converter("a | b|c") == ["a", "b", "c"]
+
+
+def test_field_list_str_keeps_empty_items() -> None:
+    field: conf.Field[list[str]] = conf.field_list_str()
+
+    assert field.converter("a,, b,") == ["a", "", "b", ""]

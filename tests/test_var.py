@@ -17,12 +17,26 @@ def test_var_uses_environment_and_converter_at_creation(
 
 
 def test_var_uses_factory_and_default_fallback() -> None:
+    calls: list[int] = []
+
+    def build() -> list[int]:
+        calls.append(1)
+        return []
+
+    var: conf.Var[list[int]] = conf.Var("items", factory=build)
+    assert var.get() == []
+    assert calls == [1]
+
+
+def test_var_without_value_raises_unless_default_is_provided() -> None:
     var: conf.Var[list] = conf.Var("items", factory=list)
     missing: conf.Var[str] = conf.Var("missing")
 
     assert var.name == "items"
     assert var.get() == []
     assert missing.get("fallback") == "fallback"
+    with pytest.raises(LookupError):
+        missing.get()
 
 
 def test_var_load_env_reset_and_override_restore_value(
@@ -42,3 +56,29 @@ def test_var_load_env_reset_and_override_restore_value(
     with var.override("local"):
         assert var.get() == "local"
     assert var.get() == "prod"
+
+
+def test_var_load_env_ignores_missing_or_unconfigured_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configured: conf.Var[str] = conf.Var("configured", default="local", env="APP_MODE")
+    unconfigured: conf.Var[str] = conf.Var("unconfigured", default="local")
+
+    configured.load_env()
+    unconfigured.load_env()
+    assert configured.get() == "local"
+    assert unconfigured.get() == "local"
+
+    monkeypatch.setenv("APP_MODE", "prod")
+    configured.load_env()
+    assert configured.get() == "prod"
+
+
+def test_var_override_is_context_local() -> None:
+    var: conf.Var[str] = conf.Var("mode", default="global")
+    other_context: contextvars.Context = contextvars.Context()
+
+    with var.override("local"):
+        assert var.get() == "local"
+        assert other_context.run(var.get) == "global"
+    assert var.get() == "global"

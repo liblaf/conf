@@ -11,11 +11,12 @@ from ._var import Var
 
 @dataclasses.dataclass(frozen=True, slots=True, weakref_slot=True)
 class Field[T]:
-    """Describe a config value and lazily bind it to a `Var`.
+    """Descriptor that declares one configuration value.
 
-    The descriptor stores the environment-variable name, default value, optional
-    factory, and string converter used when it creates a bound variable for a
-    config instance.
+    A `Field` stores the environment-variable name, default or factory, and
+    converter used to create a bound [`Var`][liblaf.conf.Var]. Binding is lazy:
+    the `Var` is created the first time the field is accessed on a config
+    instance.
     """
 
     env: str | None = None
@@ -31,7 +32,7 @@ class Field[T]:
     def __get__(
         self, instance: ConfigProtocol | None, owner: type | None = None
     ) -> Self | Var[T]:
-        """Return the descriptor on the class or a cached bound variable."""
+        """Return this descriptor on classes or a cached bound `Var` on objects."""
         if instance is None:
             return self
         if self.name not in instance.__dict__:
@@ -39,11 +40,11 @@ class Field[T]:
         return instance.__dict__[self.name]
 
     def __set_name__(self, owner: type, name: str) -> None:
-        """Record the attribute name assigned by the owning config class."""
+        """Record the field name assigned by the owning config class."""
         object.__setattr__(self, "name", name)
 
     def _bind(self, instance: ConfigProtocol) -> Var[T]:
-        """Create the `Var` instance used by one config object."""
+        """Create the `Var` used by one config instance."""
         name: str = instance.name + "." + self.name
         env: str = self.env or instance.env_prefix + self.name.upper()
         return Var(
@@ -62,5 +63,19 @@ def field[T](
     factory: Factory[T] | None = None,
     converter: Converter[T] = converters.identity,
 ) -> Field[T]:
-    """Create a `Field` descriptor for a config attribute."""
+    """Create a [`Field`][liblaf.conf.Field] descriptor.
+
+    Args:
+        env: Explicit environment-variable name. When omitted, the owning
+            config's `env_prefix` and the field name are combined.
+        default: Default value used when no environment value is present.
+        factory: Zero-argument callable used to create a default when `default`
+            is omitted.
+        converter: Callable used to convert environment strings to Python
+            values.
+
+    Returns:
+        A field descriptor ready to assign on a
+        [`BaseConfig`][liblaf.conf.BaseConfig] subclass.
+    """
     return Field(env=env, default=default, factory=factory, converter=converter)

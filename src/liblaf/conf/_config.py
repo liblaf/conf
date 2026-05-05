@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class ConfigMeta(type):
-    """Build config classes and cache a singleton instance per subclass."""
+    """Collect config descriptors and cache one instance per config class."""
 
     def __new__(
         mcs,
@@ -27,7 +27,7 @@ class ConfigMeta(type):
         /,
         **_kwargs: Any,
     ) -> type:
-        """Create a config class with derived metadata and descriptor maps."""
+        """Create a config class with derived names and descriptor maps."""
         if "name" not in namespace:
             namespace["name"] = alias_generators.to_snake(name).removesuffix("_config")
         if "env_prefix" not in namespace:
@@ -56,21 +56,22 @@ class ConfigMeta(type):
         return cls
 
     def __call__[T: BaseConfig](cls: type[T], *args, **kwargs) -> T:
-        """Return the cached config instance, creating it on first access."""
+        """Return the class singleton, creating it on first access."""
         instance: T | None = cls.__dict__.get("_instance")
         if instance is None:
-            instance = super().__call__(*args, **kwargs)  # ty:ignore[invalid-super-argument]
+            instance = super().__call__(*args, **kwargs)
             cls._instance = instance
         return instance
 
 
 class BaseConfig(metaclass=ConfigMeta):
-    """Group related configuration variables behind a singleton object.
+    """Base class for descriptor-backed configuration containers.
 
-    Subclasses declare [`Field`][liblaf.conf.Field] descriptors for scalar values
-    and [`group`][liblaf.conf.group] descriptors for nested configuration
-    sections. Instances expose helpers for loading environment variables,
-    applying temporary overrides, and serializing the current state.
+    Subclasses declare [`Field`][liblaf.conf.Field] descriptors for individual
+    settings and [`group`][liblaf.conf.group] descriptors for nested
+    [`BaseConfig`][liblaf.conf.BaseConfig] sections. Each config subclass is a
+    cached singleton, while its bound [`Var`][liblaf.conf.Var] values remain
+    context-local.
     """
 
     name: ClassVar[str]
@@ -80,7 +81,11 @@ class BaseConfig(metaclass=ConfigMeta):
     _instance: ClassVar[Self | None] = None
 
     def load_env(self) -> None:
-        """Refresh every field from its configured environment variable."""
+        """Refresh all fields from their configured environment variables.
+
+        Nested [`BaseConfig`][liblaf.conf.BaseConfig] groups are refreshed
+        recursively.
+        """
         for name in self._fields:
             var: Var[Any] = self._get_field(name)
             var.load_env()
@@ -89,10 +94,15 @@ class BaseConfig(metaclass=ConfigMeta):
             group.load_env()
 
     def set(self, changes: Mapping[str, Any] | None = None, /, **kwargs: Any) -> None:
-        """Update fields or groups from a mapping and keyword arguments.
+        """Set fields or nested groups from Python values.
 
-        Nested groups accept mapping values and forward them to the nested
-        config's own `set()` method.
+        Mapping values passed for nested config groups are forwarded to that
+        group's own `set()` method. When `changes` and keyword arguments contain
+        the same name, the value from `changes` is applied.
+
+        Args:
+            changes: Optional mapping of field or group names to new values.
+            **kwargs: Additional field or group updates.
         """
         if changes is not None:
             kwargs.update(changes)
@@ -104,14 +114,19 @@ class BaseConfig(metaclass=ConfigMeta):
     def override(
         self, changes: Mapping[str, Any] | None = None, /, **kwargs: Any
     ) -> Generator[None]:
-        """Temporarily override one or more values within a context manager.
+        """Temporarily override fields or nested groups in the active context.
+
+        Mapping values passed for nested groups are delegated to the nested
+        config's own `override()` method. Previous values are restored even when
+        the block exits with an exception.
 
         Args:
             changes: Optional mapping of names to temporary values.
             **kwargs: Additional name-to-value overrides.
 
         Yields:
-            `None` while the overrides are active.
+            `None` while the overrides are active. Previous values are restored
+            when the context exits.
         """
         if changes is not None:
             kwargs.update(changes)
@@ -122,7 +137,12 @@ class BaseConfig(metaclass=ConfigMeta):
             yield
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize the current config tree to nested dictionaries."""
+        """Serialize the active config tree to nested dictionaries.
+
+        Returns:
+            A dictionary containing current field values and nested group
+            dictionaries.
+        """
         result: dict[str, Any] = {}
         for name in self._fields:
             result[name] = self._get_field(name).get()
@@ -131,7 +151,12 @@ class BaseConfig(metaclass=ConfigMeta):
         return result
 
     def to_namespace(self) -> types.SimpleNamespace:
-        """Serialize the current config tree to nested namespaces."""
+        """Serialize the active config tree to nested namespaces.
+
+        Returns:
+            A [`types.SimpleNamespace`][] tree mirroring
+            [`to_dict()`][liblaf.conf.BaseConfig.to_dict].
+        """
         result: types.SimpleNamespace = types.SimpleNamespace()
         for name in self._fields:
             setattr(result, name, self._get_field(name).get())

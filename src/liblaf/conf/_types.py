@@ -1,11 +1,11 @@
-"""Shared typing protocols and aliases for the configuration package."""
+"""Shared typing protocols and aliases used by config descriptors."""
 
 from collections.abc import Callable
 from typing import ClassVar, Protocol
 
 
 class ConfigProtocol(Protocol):
-    """Minimal protocol implemented by config instances bound to a `Field`."""
+    """Minimum config interface required by [`Field`][liblaf.conf.Field]."""
 
     name: ClassVar[str]
     env_prefix: ClassVar[str]

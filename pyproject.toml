@@ -3,7 +3,7 @@
 
 [project]
 name = "liblaf-conf"
-description = "Typed Python configuration models with environment loading and context-local overrides."
+description = "Descriptor-based Python configuration models with environment loading and context-local overrides."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
