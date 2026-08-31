@@ -9,6 +9,15 @@ site_author = "liblaf"
 # Navigation
 nav = [
   { "Home" = "README.md" },
+  { "Getting started" = "guides/getting-started.md" },
+  { "Guides" = [
+    "guides/value-resolution.md",
+    "guides/environment.md",
+    "guides/converters.md",
+    "guides/nested-configs.md",
+    "guides/testing.md"
+  ] },
+  { "Concepts" = ["concepts/context-isolation.md"] },
   { "API Reference" = [
     { "<code class=\"doc-symbol doc-symbol-toc doc-symbol-module\"></code> conf" = [
       "reference/liblaf/conf/README.md",
@@ -83,7 +92,10 @@ default_handler = "python"
 enable_inventory = true
 
 [project.plugins.mkdocstrings.handlers.python]
-inventories = ["https://docs.python.org/3/objects.inv"]
+inventories = [
+  "https://docs.python.org/3/objects.inv",
+  "https://docs.pydantic.dev/latest/objects.inv"
+]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 # General

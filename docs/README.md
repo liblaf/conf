@@ -25,7 +25,7 @@ class DatabaseConfig(conf.BaseConfig):
 class AppConfig(conf.BaseConfig):
     debug: conf.Field[bool] = conf.field_bool(default=False)
     port: conf.Field[int] = conf.field_int(env="PORT", default=8000)
-    hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
+    hosts: conf.Field[list[str]] = conf.field_list_str(factory=lambda: ["localhost"])
     database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
 ```
 
@@ -99,6 +99,21 @@ assert cfg.to_dict() == {
 
 `to_dict()` reads the same active context as `get()`, so temporary overrides
 are reflected while the override is active and disappear when it exits.
+
+## Context and Reload Semantics
+
+`load_env()`, `set()`, and `override()` operate in the current `ContextVar`
+context. Tasks inherit a context when created; later changes do not mutate
+existing tasks or other threads. `to_dict()` returns new dictionaries and
+`to_namespace()` returns new namespace containers, but neither deep-copies
+mutable field values. Copy a mutable leaf yourself when a downstream boundary
+requires ownership or immutability.
+
+Each reload is complete for the active context: a present environment variable
+is converted and installed, while an absent one clears the active value and
+returns the field to a fresh default or factory result on the next read.
+`set()` and `override()` pass their Python values through the same converter.
+Invalid values raise their conversion error; no fallback value is substituted.
 
 ## API Map
 

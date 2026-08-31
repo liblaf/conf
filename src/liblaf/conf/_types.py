@@ -1,7 +1,7 @@
 """Shared typing protocols and aliases used by config descriptors."""
 
 from collections.abc import Callable
-from typing import ClassVar, Protocol
+from typing import Any, ClassVar, Protocol
 
 
 class ConfigProtocol(Protocol):
@@ -11,5 +11,5 @@ class ConfigProtocol(Protocol):
     env_prefix: ClassVar[str]
 
 
-type Converter[T] = Callable[[str], T]
+type Converter[T] = Callable[[Any], T]
 type Factory[T] = Callable[[], T]

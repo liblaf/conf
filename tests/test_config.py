@@ -85,3 +85,16 @@ def test_base_config_load_env_recurses_into_groups(
     cfg.load_env()
 
     assert cfg.to_dict() == {"count": 5, "child": {"flag": True}}
+
+
+def test_base_config_set_and_override_use_field_converter() -> None:
+    class AppConfig(conf.BaseConfig):
+        count: conf.Field[int] = conf.Field(default=1, converter=int)
+
+    cfg = AppConfig()
+    cfg.set(count="2")
+    assert cfg.count.get() == 2
+    with cfg.override(count="3"):
+        assert cfg.count.get() == 3
+    with pytest.raises(ValueError, match="invalid literal"):
+        cfg.set(count="not-an-int")

@@ -71,8 +71,8 @@ def field[T](
         default: Default value used when no environment value is present.
         factory: Zero-argument callable used to create a default when `default`
             is omitted.
-        converter: Callable used to convert environment strings to Python
-            values.
+        converter: Callable used to normalize environment strings and direct
+            Python assignments to the field value.
 
     Returns:
         A field descriptor ready to assign on a

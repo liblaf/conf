@@ -29,7 +29,8 @@ from environment variables, and apply scoped runtime overrides with
 - 🌱 **Environment-ready defaults:** Bind fields to derived or explicit
   environment variable names and refresh a whole config tree with `load_env()`.
 - 🎯 **Typed helper factories:** Reach for `field_bool`, `field_json`,
-  `field_path`, and the temporal helpers when you want built-in string parsing.
+  `field_path`, and the temporal helpers for one conversion path shared by
+  environment values and direct assignments.
 - 🔄 **Context-local overrides:** Use `Var.override()` or
   `BaseConfig.override()` to change values temporarily without leaking across
   contexts.
@@ -57,7 +58,9 @@ class DatabaseConfig(conf.BaseConfig):
 
 class AppConfig(conf.BaseConfig):
     debug: conf.Field[bool] = conf.field_bool(default=False)
-    allowed_hosts: conf.Field[list[str]] = conf.field_list_str(default=["localhost"])
+    allowed_hosts: conf.Field[list[str]] = conf.field_list_str(
+        factory=lambda: ["localhost"]
+    )
     database: conf.Group[DatabaseConfig] = conf.group(DatabaseConfig)
 
 
@@ -79,7 +82,22 @@ assert cfg.to_dict() == {
 
 `BaseConfig` subclasses are cached singletons, so `AppConfig()` returns the
 same config object each time while each field still stores its active value in
-a `ContextVar`.
+a `ContextVar`. Mutable defaults are copied when first read in each context;
+use a `factory` when constructing the value needs more than a copy.
+
+## Semantics
+
+`load_env()`, `set()`, and `override()` affect only the active `contextvars`
+context. Child async tasks inherit values when they are created; existing tasks
+and threads keep their own context. `to_dict()` and `to_namespace()` read one
+active-context view and include active overrides. They allocate new container
+objects but do not deep-copy mutable field values.
+
+For a field with an environment variable, `load_env()` is deterministic: a
+present variable is converted and installed; an absent variable clears the
+current value, so the next read uses a fresh declared default or factory value.
+Conversion errors always propagate. Direct `set()` and `override()` use that
+same field converter, rather than bypassing validation.
 
 ## ⌨️ Local Development
 

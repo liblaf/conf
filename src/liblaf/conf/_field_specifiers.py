@@ -38,7 +38,7 @@ def field_bool(
         A [`Field`][liblaf.conf.Field] whose converter returns `bool` values.
     """
     if converter is None:
-        converter: Converter[bool] = converters.pydantic_type_adapter_validate_strings(
+        converter: Converter[bool] = converters.pydantic_type_adapter_validate_python(
             bool
         )
     return Field(env=env, default=default, factory=factory, converter=converter)
@@ -65,7 +65,7 @@ def field_date(
     """
     if converter is None:
         converter: Converter[datetime.date] = (
-            converters.pydantic_type_adapter_validate_strings(Date)
+            converters.pydantic_type_adapter_validate_python(Date)
         )
     return Field(env=env, default=default, factory=factory, converter=converter)
 
@@ -91,7 +91,7 @@ def field_datetime(
     """
     if converter is None:
         converter: Converter[datetime.datetime] = (
-            converters.pydantic_type_adapter_validate_strings(DateTime)
+            converters.pydantic_type_adapter_validate_python(DateTime)
         )
     return Field(env=env, default=default, factory=factory, converter=converter)
 
@@ -183,7 +183,10 @@ def field_json(
         values.
     """
     if converter is None:
-        converter: Converter[Any] = json.loads
+
+        def converter(value: Any) -> Any:
+            return json.loads(value) if isinstance(value, str) else value
+
     return Field(env=env, default=default, factory=factory, converter=converter)
 
 
@@ -211,7 +214,11 @@ def field_list_str(
     """
     if converter is None:
 
-        def converter(value: str) -> list[str]:
+        def converter(value: Any) -> list[str]:
+            if isinstance(value, list):
+                if not all(isinstance(item, str) for item in value):
+                    raise TypeError
+                return value
             return [item.strip() for item in value.split(delimiter)]
 
     return Field(env=env, default=default, factory=factory, converter=converter)
@@ -294,7 +301,7 @@ def field_time(
     """
     if converter is None:
         converter: Converter[datetime.time] = (
-            converters.pydantic_type_adapter_validate_strings(Time)
+            converters.pydantic_type_adapter_validate_python(Time)
         )
     return Field(env=env, default=default, factory=factory, converter=converter)
 
@@ -320,6 +327,6 @@ def field_timedelta(
     """
     if converter is None:
         converter: Converter[datetime.timedelta] = (
-            converters.pydantic_type_adapter_validate_strings(Duration)
+            converters.pydantic_type_adapter_validate_python(Duration)
         )
     return Field(env=env, default=default, factory=factory, converter=converter)

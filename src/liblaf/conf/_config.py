@@ -97,8 +97,9 @@ class BaseConfig(metaclass=ConfigMeta):
         """Set fields or nested groups from Python values.
 
         Mapping values passed for nested config groups are forwarded to that
-        group's own `set()` method. When `changes` and keyword arguments contain
-        the same name, the value from `changes` is applied.
+        group's own `set()` method. Field values pass through their field
+        converter exactly as environment values do. When `changes` and keyword
+        arguments contain the same name, the value from `changes` is applied.
 
         Args:
             changes: Optional mapping of field or group names to new values.
@@ -137,11 +138,21 @@ class BaseConfig(metaclass=ConfigMeta):
             yield
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize the active config tree to nested dictionaries.
+        """Serialize the active config tree to new nested dictionaries.
+
+        Container dictionaries are newly allocated, but field values are not
+        copied. Mutable leaves therefore remain the same objects held by their
+        active variables.
 
         Returns:
             A dictionary containing current field values and nested group
             dictionaries.
+
+        Examples:
+            >>> class ExampleConfig(BaseConfig):
+            ...     count = Field(default=1)
+            >>> ExampleConfig().to_dict()
+            {'count': 1}
         """
         result: dict[str, Any] = {}
         for name in self._fields:

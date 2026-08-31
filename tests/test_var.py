@@ -74,6 +74,42 @@ def test_var_load_env_ignores_missing_or_unconfigured_environment(
     assert configured.get() == "prod"
 
 
+def test_var_reloads_missing_environment_to_a_fresh_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def converter(value: str | list[str]) -> list[str]:
+        return [value] if isinstance(value, str) else value
+
+    var: conf.Var[list[str]] = conf.Var(
+        "labels", default=["default"], env="APP_LABELS", converter=converter
+    )
+    var.set(["explicit"])
+    monkeypatch.setenv("APP_LABELS", "environment")
+    var.load_env()
+    assert var.get() == ["environment"]
+
+    monkeypatch.delenv("APP_LABELS")
+    var.load_env()
+    assert var.get() == ["default"]
+
+
+def test_var_defaults_are_fresh_in_each_context_and_set_uses_converter() -> None:
+    var: conf.Var[list[str]] = conf.Var(
+        "labels",
+        default=["default"],
+        converter=lambda value: [item.upper() for item in value],
+    )
+    assert var.get() == ["DEFAULT"]
+    var.get().append("LOCAL")
+
+    other_context = contextvars.Context()
+    assert other_context.run(var.get) == ["DEFAULT"]
+    assert var.get() == ["DEFAULT", "LOCAL"]
+
+    var.set(["direct"])
+    assert var.get() == ["DIRECT"]
+
+
 def test_var_override_is_context_local() -> None:
     var: conf.Var[str] = conf.Var("mode", default="global")
     other_context: contextvars.Context = contextvars.Context()
