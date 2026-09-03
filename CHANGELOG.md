@@ -7,6 +7,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Changelog](https://github.com/conventional-changelog/conventional-changelog-config-spec/blob/master/versions/2.2.0/README.md),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.0](https://github.com/liblaf/conf/releases/tag/v0.2.0) - 2026-09-03
+
+### 💥 BREAKING CHANGES
+
+- field converters now run for defaults, factory results, set(), and override() values in addition to environment strings. - [d76fca1](https://github.com/liblaf/conf/commit/d76fca14cf1444757ee1802a0aca5a71f9627913) by [@liblaf](https://github.com/liblaf)
+
+### ✨ Features
+
+- **\[breaking\]** normalize every configuration value source - [d76fca1](https://github.com/liblaf/conf/commit/d76fca14cf1444757ee1802a0aca5a71f9627913) by [@liblaf](https://github.com/liblaf)
+
+### ⚙️ Continuous Integrations
+
+- skip absent benchmark suite - [59acc4c](https://github.com/liblaf/conf/commit/59acc4caab2b41027f37359463f8f0833a14be0d) by [@liblaf](https://github.com/liblaf)
+
+### ❤️ Contributors
+
+- [@liblaf](https://github.com/liblaf)
+- [@renovate[bot]](https://github.com/apps/renovate)
+- [@liblaf-copier[bot]](https://github.com/apps/liblaf-copier) made their first contribution in [#32](https://github.com/liblaf/conf/pull/32)
+
 ## [v0.1.2](https://github.com/liblaf/conf/releases/tag/v0.1.2) - 2026-05-05
 
 ### 📝 Documentation
@@ -15,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ❤️ Contributors
 
+- [@liblaf-release-please[bot]](https://github.com/apps/liblaf-release-please)
 - [@liblaf](https://github.com/liblaf)
 - [@renovate[bot]](https://github.com/apps/renovate) made their first contribution in [#15](https://github.com/liblaf/conf/pull/15)
 
